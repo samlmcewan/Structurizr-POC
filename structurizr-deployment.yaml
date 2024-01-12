@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: structurizr-config
+  namespace: structurizr-ns-op-1
+data:
+  structurizr.properties: |
+    # structurizr.properties content goes here - could just have a path to a structurizr.properties file instead of writing here?
+    # key1=value1
+    # key2=value2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: structurizr-op-1
+  namespace: structurizr-ns-op-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: structurizr-op-1
+  template:
+    metadata:
+      labels:
+        app: structurizr-op-1
+    spec:
+      containers:
+        - name: structurizr-op-1
+          image: structurizr/onpremises:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: STRUCTURIZR_PROPERTIES
+              valueFrom:
+                configMapKeyRef:
+                  name: structurizr-config
+                  key: structurizr.properties
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: structurizr-op-1
+  namespace: structurizr-ns-op-1
+spec:
+  selector:
+    app: structurizr-op-1
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
